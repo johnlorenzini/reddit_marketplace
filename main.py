@@ -4,7 +4,6 @@ import praw, os
 
 f = open('ids_found.txt', 'a')
 valid = {'a': 'appleswap', 'h': 'hardwareswap', 'm': 'mechmarket', 'o': 'mousemarket'}
-pictures = {'appleswap': '/Users/typhic/Developer/Projects/reddit_marketplace/ICOs/as.png', 'hardwareswap': '/Users/typhic/Developer/Projects/reddit_marketplace/ICOs/hws.png', 'mechmarket': '/Users/typhic/Developer/Projects/reddit_marketplace/ICOs/mech.png', 'mousemarket': '/Users/typhic/Developer/Projects/reddit_marketplace/ICOs/mouse.png'}
 
 def prompt(message):
     return input(message)
@@ -91,7 +90,7 @@ def print_search(sr, posts):
                 title = post.title
             url = str(post.url)
             print(f'title: {title}\nurl: {url}\n\n')
-            Notifier.notify(str(title), title=str(sr), open=str(url))
+            Notifier.notify('new listing found', title=sr, open=url)
         print('\n--------------------------------\n')
     else:
         print(f'\n--------------------------------\nfound no new results in subreddit {sr}\n--------------------------------\n')
