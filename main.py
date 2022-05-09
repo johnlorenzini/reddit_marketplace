@@ -25,12 +25,9 @@ def subreddits():
             sleep(1)     
         else: 
             if nxt in sel:
-                print(f'removed "{valid[nxt]}"') 
                 sel = sel.replace(nxt, "")
             else: 
-                print(f'selected "{valid[nxt]}"')
                 sel += nxt
-        sleep(.5)
     _clear()
     return sorted(valid[item] for item in list(sel))
 
@@ -41,6 +38,7 @@ def get_search():
     _clear()
     return prompt(f"--------------------------------\nenter a specific search\nor press ENTER to skip\n--------------------------------\n")
 
+# not yet implemented: try to scan selftext of post for a price & offer easier filtering of posts
 def get_price():
     _clear()
     price = prompt(f"--------------------------------\nenter a maximum budget\nor press ENTER to skip\n--------------------------------\n$")
@@ -54,21 +52,24 @@ def get_price():
         return None
 
 def run():
-    simulate(subreddits(), praw.Reddit('MP', user_agent="marketplace_scanner"), get_search(), get_price())
+    simulate(subreddits(), praw.Reddit('MP', user_agent="marketplace_scanner"), get_search())
 
-def simulate(srs, client, search, price):
+def simulate(srs, client, search, price=0.00):
     _clear()
     cont = prompt(f"--------------------------------\nsummary:\n\nsubreddits: {str(srs)[1:-1]}\nsearch: {search}\nprice: ${price}\n--------------------------------\ncontinue? (y/n)\n")
     _clear()
     if cont == 'y':
+        found_items = 0
         while True:
             f = open('ids_found.txt', 'r+')
             tags = f.readlines()
+            print(f'(items found since program start --> {found_items})\n\n')
             for sr in srs:
                 match = []
                 for post in client.subreddit(sr).new(limit=200):
                     if str(post.id) + "\n" not in tags:
-                        if search.lower() in str(post.title).lower():
+                        if '[W]' in post.title and search.lower() in post.title[:post.title.index('[W]')].lower():
+                            found_items+=1
                             match.append(post)
                         f.write(post.id + "\n")
                 print_search(sr, match)
@@ -76,6 +77,7 @@ def simulate(srs, client, search, price):
             sleep(5)
             _clear()
             for i in range(59, -1, -1):
+                print(f'(items found since program start --> {found_items})\n\n')
                 print(f'--------------------------------\nfinished, sleeping for\n{i} second(s)\n--------------------------------\n')
                 sleep(1)
                 _clear()
@@ -84,16 +86,12 @@ def print_search(sr, posts):
     if len(posts) > 0:
         print(f'{len(posts)} new results found in subreddit {sr}:\n--------------------------------\n')
         for post in posts:
-            try:
-                title = post.title[post.title.index('[H]'):]
-            except:
-                title = post.title
-            url = str(post.url)
-            print(f'title: {title}\nurl: {url}\n\n')
-            Notifier.notify('new listing found', title=sr, open=url)
+            title = post.title[post.title.index('[H]'):]    
+            print(f'title: {title}\nurl: {post.url}\n')
+            Notifier.notify('new listing found', title=sr, open=str(post.url))
         print('\n--------------------------------\n')
     else:
-        print(f'\n--------------------------------\nfound no new results in subreddit {sr}\n--------------------------------\n')
+        print(f'found no new results in subreddit {sr}\n--------------------------------\n--------------------------------\n')
 
         
 
